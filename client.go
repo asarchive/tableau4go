@@ -132,7 +132,7 @@ func (api *API) QueryProjects(siteId string) ([]Project, error) {
 	totalAvailable := 1
 	projects := []Project{}
 	for i := 1; (len(projects) <= totalAvailable); i++  {
-		projectsResponse, err := api.QueryProjectsPage(siteId, i)
+		projectsResponse, err := api.QueryProjectsByPage(siteId, i)
 		if err != nil {
 			return projects, err
 		}
@@ -145,7 +145,7 @@ func (api *API) QueryProjects(siteId string) ([]Project, error) {
 }
 
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
-func (api *API) QueryProjectsPage(siteId string, pageNum int) (QueryProjectsResponse, error) {
+func (api *API) QueryProjectsByPage(siteId string, pageNum int) (QueryProjectsResponse, error) {
 	url := fmt.Sprintf("%s/api/%s/sites/%s/projects?pageSize=%v&pageNumber=%v", api.Server, api.Version, siteId, PAGESIZE, pageNum)
 	headers := make(map[string]string)
 	response := QueryProjectsResponse{}

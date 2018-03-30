@@ -132,18 +132,20 @@ func (api *API) QueryProjects(siteId string) ([]Project, error) {
 	totalAvailable := 1
 	projects := []Project{}
 	for i := 1; (len(projects) <= totalAvailable); i++  {
-		projectsResponse, err := api.QueryProjectsResponse(siteId, i)
+		projectsResponse, err := api.QueryProjectsPage(siteId, i)
 		if err != nil {
 			return projects, err
 		}
 		projects = append(projects, projectsResponse.Projects.Projects...)
+		// bjenkins: projects may be added or deleted while we are requesting them from the server.
+		// so it's best to keep resetting the total
 		totalAvailable = projectsResponse.Pagination.TotalAvailable
 	}
 	return projects, nil
 }
 
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
-func (api *API) QueryProjectsResponse(siteId string, pageNum int) (QueryProjectsResponse, error) {
+func (api *API) QueryProjectsPage(siteId string, pageNum int) (QueryProjectsResponse, error) {
 	url := fmt.Sprintf("%s/api/%s/sites/%s/projects?pageSize=%v&pageNumber=%v", api.Server, api.Version, siteId, PAGESIZE, pageNum)
 	headers := make(map[string]string)
 	response := QueryProjectsResponse{}

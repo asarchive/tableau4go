@@ -138,7 +138,14 @@ type AuthResponse struct {
 }
 
 type QueryProjectsResponse struct {
+	Pagination Pagination `json:"pagination,omitempty" xml:"pagination,omitempty"`
 	Projects Projects `json:"projects,omitempty" xml:"projects,omitempty"`
+}
+
+type Pagination struct {
+	PageNumber  	int `json:"pageNumber,omitempty" xml:"pageNumber,attr,omitempty"`
+	PageSize    	int `json:"pageSize,omitempty" xml:"pageSize,attr,omitempty"`
+	TotalAvailable  int `json:"totalAvailable,omitempty" xml:"totalAvailable,attr,omitempty"`
 }
 
 type Credentials struct {

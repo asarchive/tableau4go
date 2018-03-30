@@ -31,6 +31,7 @@ const application_xml_content_type = "application/xml"
 const POST = "POST"
 const GET = "GET"
 const DELETE = "DELETE"
+const PAGESIZE = 100
 
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Sign_In%3FTocPath%3DAPI%2520Reference%7C_____51
 func (api *API) Signin(username, password string, contentUrl string, userIdToImpersonate string) error {
@@ -127,13 +128,27 @@ func (api *API) QueryUserOnSite(siteId, userId string) (User, error) {
 	return retval.User, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
 func (api *API) QueryProjects(siteId string) ([]Project, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/projects", api.Server, api.Version, siteId)
+	totalAvailable := 1
+	projects := []Project{}
+	for i := 1; (len(projects) <= totalAvailable); i++  {
+		projectsResponse, err := api.QueryProjectsResponse(siteId, i)
+		if err != nil {
+			return projects, err
+		}
+		projects = append(projects, projectsResponse.Projects.Projects...)
+		totalAvailable = projectsResponse.Pagination.TotalAvailable
+	}
+	return projects, nil
+}
+
+//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
+func (api *API) QueryProjectsResponse(siteId string, pageNum int) (QueryProjectsResponse, error) {
+	url := fmt.Sprintf("%s/api/%s/sites/%s/projects?pageSize=%v&pageNumber=%v", api.Server, api.Version, siteId, PAGESIZE, pageNum)
 	headers := make(map[string]string)
-	retval := QueryProjectsResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
-	return retval.Projects.Projects, err
+	response := QueryProjectsResponse{}
+	err := api.makeRequest(url, GET, nil, &response, headers)
+	return response, err
 }
 
 func (api *API) GetProjectByName(siteId, name string) (Project, error) {

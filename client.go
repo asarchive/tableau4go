@@ -131,7 +131,7 @@ func (api *API) QueryUserOnSite(siteId, userId string) (User, error) {
 func (api *API) QueryProjects(siteId string) ([]Project, error) {
 	totalAvailable := 1
 	projects := []Project{}
-	for i := 1; (len(projects) <= totalAvailable); i++  {
+	for i := 1; (len(projects) < totalAvailable); i++  {
 		projectsResponse, err := api.QueryProjectsByPage(siteId, i)
 		if err != nil {
 			return projects, err

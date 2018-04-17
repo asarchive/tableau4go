@@ -74,6 +74,12 @@ func (api *API) Signout() error {
 	return err
 }
 
+// helper method to convert to contentUrl as most api methods use this
+func ConvertToSiteContentUrl(siteName string) (string) {
+	siteContentUrl := strings.Replace(siteName, " ", "", -1)
+	return siteContentUrl
+}
+
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySites() ([]Site, error) {
 	url := fmt.Sprintf("%s/api/%s/sites/", api.Server, api.Version)

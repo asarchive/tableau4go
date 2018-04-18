@@ -74,6 +74,12 @@ func (api *API) Signout() error {
 	return err
 }
 
+// helper method to convert to contentUrl as most api methods use this
+func ConvertSiteNameToContentUrl(siteName string) (string) {
+	siteContentUrl := strings.Replace(siteName, " ", "", -1)
+	return siteContentUrl
+}
+
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySites() ([]Site, error) {
 	url := fmt.Sprintf("%s/api/%s/sites/", api.Server, api.Version)
@@ -290,6 +296,25 @@ func (api *API) GetSiteID(siteName string) (string, error) {
 	}
 	return site.ID, err
 }
+
+// use this method to easily get the site by name
+func (api *API) GetSite(siteName string) (Site, error) {
+	if siteName == api.DefaultSiteName {
+		site, err := api.QuerySiteByName(siteName, false)
+		if err != nil {
+			return site, err
+		}
+		return site, err
+	} else {
+		contentUrl := ConvertSiteNameToContentUrl(siteName)
+		site, err := api.QuerySiteByContentUrl(contentUrl, false)
+		if err != nil {
+			return site, err
+		}
+		return site, err
+	}
+}
+
 
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Create_Project%3FTocPath%3DAPI%2520Reference%7C_____14
 //POST /api/api-version/sites/site-id/projects

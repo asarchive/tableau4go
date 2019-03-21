@@ -20,6 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -75,7 +76,7 @@ func (api *API) Signout() error {
 }
 
 // helper method to convert to contentUrl as most api methods use this
-func ConvertSiteNameToContentUrl(siteName string) (string) {
+func ConvertSiteNameToContentUrl(siteName string) string {
 	siteContentUrl := strings.Replace(siteName, " ", "", -1)
 	return siteContentUrl
 }
@@ -147,7 +148,7 @@ func (api *API) QueryUserOnSite(siteId, userId string) (User, error) {
 func (api *API) QueryProjects(siteId string) ([]Project, error) {
 	totalAvailable := 1
 	projects := []Project{}
-	for i := 1; (len(projects) < totalAvailable); i++  {
+	for i := 1; len(projects) < totalAvailable; i++ {
 		projectsResponse, err := api.QueryProjectsByPage(siteId, i)
 		if err != nil {
 			return projects, err
@@ -200,16 +201,16 @@ func (api *API) QueryDatasources(siteId string, datasourceName string) ([]Dataso
 
 	// jbarefoot: We don't do any paging here, but setting the pageSize to the max of 1000 + filter by name should work
 
-	var url string
+	var requestUrl string
 	if datasourceName != "" {
-		url = fmt.Sprintf("%s/api/%s/sites/%s/datasources?pageSize=1000&filter=name:eq:%s", api.Server, api.Version, siteId, datasourceName)
+		requestUrl = fmt.Sprintf("%s/api/%s/sites/%s/datasources?pageSize=1000&filter=name:eq:%s", api.Server, api.Version, siteId, url.QueryEscape(datasourceName))
 	} else {
-		url = fmt.Sprintf("%s/api/%s/sites/%s/datasources?pageSize=1000", api.Server, api.Version, siteId)
+		requestUrl = fmt.Sprintf("%s/api/%s/sites/%s/datasources?pageSize=1000", api.Server, api.Version, siteId)
 	}
 
 	headers := make(map[string]string)
 	retval := QueryDatasourcesResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &retval, headers)
 	if api.Debug {
 		fmt.Printf("Found %d datasources for siteId %s \n", len(retval.Datasources.Datasources), siteId)
 	}
@@ -324,7 +325,6 @@ func (api *API) GetSite(siteName string) (Site, error) {
 		return site, err
 	}
 }
-
 
 //http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Create_Project%3FTocPath%3DAPI%2520Reference%7C_____14
 //POST /api/api-version/sites/site-id/projects

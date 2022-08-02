@@ -18,11 +18,8 @@ import (
 	"time"
 )
 
-// TODO: remove once we confirm they are not used
-// const ApiVersion = "2.0"
-// const DefaultServer = "http://localhost:8000"
-// const BoundaryString = "813e3160-3c95-11e5-a151-feff819cdc9f"
-// const CRLF = "\r\n"
+const ApiVersion = "2.0"
+const BoundaryString = "813e3160-3c95-11e5-a151-feff819cdc9f"
 
 type API struct {
 	Server              string

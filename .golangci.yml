@@ -114,7 +114,7 @@ linters-settings:
 
   varcheck:
     # Check usage of exported fields and variables.
-    exported-fields: true
+    exported-fields: false
 
   revive:
     rules:

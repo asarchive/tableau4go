@@ -76,7 +76,7 @@ func (api *API) Signout() error {
 }
 
 // helper method to convert to contentUrl as most api methods use this
-func ConvertSiteNameToContentURL(siteName string) string {
+func ConvertSiteNameToContentUrl(siteName string) string {
 	return strings.ReplaceAll(siteName, " ", "")
 }
 
@@ -114,8 +114,8 @@ func (api *API) QuerySiteByName(name string, includeStorage bool) (Site, error) 
 }
 
 // http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
-func (api *API) QuerySiteByContentURL(contentURL string, includeStorage bool) (Site, error) {
-	return api.querySiteByKey("contentUrl", contentURL, includeStorage)
+func (api *API) QuerySiteByContentUrl(contentUrl string, includeStorage bool) (Site, error) {
+	return api.querySiteByKey("contentUrl", contentUrl, includeStorage)
 }
 
 // http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
@@ -325,8 +325,8 @@ func (api *API) GetSite(siteName string) (Site, error) {
 		return site, err
 	}
 
-	contentUrl := ConvertSiteNameToContentURL(siteName)
-	site, err := api.QuerySiteByContentURL(contentUrl, false)
+	contentUrl := ConvertSiteNameToContentUrl(siteName)
+	site, err := api.QuerySiteByContentUrl(contentUrl, false)
 	if err != nil {
 		return site, err
 	}

@@ -25,18 +25,18 @@ import (
 	"strings"
 )
 
-const content_type_header = "Content-Type"
-const content_length_header = "Content-Length"
-const auth_header = "X-Tableau-Auth"
-const application_xml_content_type = "application/xml"
+const contentTypeHeader = "Content-Type"
+const contentLengthHeader = "Content-Length"
+const authHeader = "X-Tableau-Auth"
+const applicationXmlContentType = "application/xml"
 const POST = "POST"
 const GET = "GET"
 const DELETE = "DELETE"
 const PAGESIZE = 100
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Sign_In%3FTocPath%3DAPI%2520Reference%7C_____51
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Sign_In%3FTocPath%3DAPI%2520Reference%7C_____51
 func (api *API) Signin(username, password string, contentUrl string, userIdToImpersonate string) error {
-	url := fmt.Sprintf("%s/api/%s/auth/signin", api.Server, api.Version)
+	requestUrl := fmt.Sprintf("%s/api/%s/auth/signin", api.Server, api.Version)
 	credentials := Credentials{Name: username, Password: password}
 	if len(userIdToImpersonate) > 0 {
 		credentials.Impersonate = &User{ID: userIdToImpersonate}
@@ -57,91 +57,90 @@ func (api *API) Signin(username, password string, contentUrl string, userIdToImp
 	}
 	payload := string(signInXML)
 	headers := make(map[string]string)
-	headers[content_type_header] = application_xml_content_type
+	headers[contentTypeHeader] = applicationXmlContentType
 	retval := AuthResponse{}
-	err = api.makeRequest(url, POST, []byte(payload), &retval, headers)
+	err = api.makeRequest(requestUrl, POST, []byte(payload), &retval, headers)
 	if err == nil {
 		api.AuthToken = retval.Credentials.Token
 	}
 	return err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Sign_Out%3FTocPath%3DAPI%2520Reference%7C_____52
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Sign_Out%3FTocPath%3DAPI%2520Reference%7C_____52
 func (api *API) Signout() error {
-	url := fmt.Sprintf("%s/api/%s/auth/signout", api.Server, api.Version)
+	requestUrl := fmt.Sprintf("%s/api/%s/auth/signout", api.Server, api.Version)
 	headers := make(map[string]string)
-	headers[content_type_header] = application_xml_content_type
-	err := api.makeRequest(url, POST, nil, nil, headers)
+	headers[contentTypeHeader] = applicationXmlContentType
+	err := api.makeRequest(requestUrl, POST, nil, nil, headers)
 	return err
 }
 
 // helper method to convert to contentUrl as most api methods use this
 func ConvertSiteNameToContentUrl(siteName string) string {
-	siteContentUrl := strings.Replace(siteName, " ", "", -1)
-	return siteContentUrl
+	return strings.ReplaceAll(siteName, " ", "")
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Server_Info%3FTocPath%3DAPI%2520Reference%7C__
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Server_Info%3FTocPath%3DAPI%2520Reference%7C__
 func (api *API) ServerInfo() (ServerInfo, error) {
 	// this call only works on apiVersion 2.4 and up
-	url := fmt.Sprintf("%s/api/%s/serverinfo", api.Server, "2.4")
+	requestUrl := fmt.Sprintf("%s/api/%s/serverinfo", api.Server, "2.4")
 	headers := make(map[string]string)
 	retval := ServerInfoResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &retval, headers)
 	return retval.ServerInfo, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySites() ([]Site, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/", api.Server, api.Version)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/", api.Server, api.Version)
 	headers := make(map[string]string)
 	retval := QuerySitesResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &retval, headers)
 	return retval.Sites.Sites, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySite(siteID string, includeStorage bool) (Site, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s", api.Server, api.Version, siteID)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s", api.Server, api.Version, siteID)
 	if includeStorage {
-		url += fmt.Sprintf("?includeStorage=%v", includeStorage)
+		requestUrl += fmt.Sprintf("?includeStorage=%v", includeStorage)
 	}
-	return api.querySite(url)
+	return api.executeQuerySite(requestUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySiteByName(name string, includeStorage bool) (Site, error) {
 	return api.querySiteByKey("name", name, includeStorage)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) QuerySiteByContentUrl(contentUrl string, includeStorage bool) (Site, error) {
 	return api.querySiteByKey("contentUrl", contentUrl, includeStorage)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
 func (api *API) querySiteByKey(key, value string, includeStorage bool) (Site, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s?key=%s", api.Server, api.Version, value, key)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s?key=%s", api.Server, api.Version, value, key)
 	if includeStorage {
-		url += fmt.Sprintf("&includeStorage=%v", includeStorage)
+		requestUrl += fmt.Sprintf("&includeStorage=%v", includeStorage)
 	}
-	return api.querySite(url)
+	return api.executeQuerySite(requestUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
-func (api *API) querySite(url string) (Site, error) {
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Sites%3FTocPath%3DAPI%2520Reference%7C_____40
+func (api *API) executeQuerySite(requestUrl string) (Site, error) {
 	headers := make(map[string]string)
 	retval := QuerySiteResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &retval, headers)
 	return retval.Site, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_User_On_Site%3FTocPath%3DAPI%2520Reference%7C_____47
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_User_On_Site%3FTocPath%3DAPI%2520Reference%7C_____47
 func (api *API) QueryUserOnSite(siteId, userId string) (User, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/users/%s", api.Server, api.Version, siteId, userId)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/users/%s", api.Server, api.Version, siteId, userId)
 	headers := make(map[string]string)
 	retval := QueryUserOnSiteResponse{}
-	err := api.makeRequest(url, GET, nil, &retval, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &retval, headers)
 	return retval.User, err
 }
 
@@ -161,12 +160,12 @@ func (api *API) QueryProjects(siteId string) ([]Project, error) {
 	return projects, nil
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Projects%3FTocPath%3DAPI%2520Reference%7C_____38
 func (api *API) QueryProjectsByPage(siteId string, pageNum int) (QueryProjectsResponse, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/projects?pageSize=%v&pageNumber=%v", api.Server, api.Version, siteId, PAGESIZE, pageNum)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/projects?pageSize=%v&pageNumber=%v", api.Server, api.Version, siteId, PAGESIZE, pageNum)
 	headers := make(map[string]string)
 	response := QueryProjectsResponse{}
-	err := api.makeRequest(url, GET, nil, &response, headers)
+	err := api.makeRequest(requestUrl, GET, nil, &response, headers)
 	return response, err
 }
 
@@ -183,24 +182,22 @@ func (api *API) GetProjectByName(siteId, name string) (Project, error) {
 	return Project{}, fmt.Errorf("Project Named '%s' Not Found", name)
 }
 
-func (api *API) GetProjectByID(siteId, ID string) (Project, error) {
+func (api *API) GetProjectByID(siteId, id string) (Project, error) {
 	projects, err := api.QueryProjects(siteId)
 	if err != nil {
 		return Project{}, err
 	}
 	for _, project := range projects {
-		if project.ID == ID {
+		if project.ID == id {
 			return project, nil
 		}
 	}
-	return Project{}, fmt.Errorf("Project with ID '%s' Not Found", ID)
+	return Project{}, fmt.Errorf("Project with ID '%s' Not Found", id)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Datasources%3FTocPath%3DAPI%2520Reference%7C_____33
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Query_Datasources%3FTocPath%3DAPI%2520Reference%7C_____33
 func (api *API) QueryDatasources(siteId string, datasourceName string) ([]Datasource, error) {
-
 	// jbarefoot: We don't do any paging here, but setting the pageSize to the max of 1000 + filter by name should work
-
 	var requestUrl string
 	if datasourceName != "" {
 		requestUrl = fmt.Sprintf("%s/api/%s/sites/%s/datasources?pageSize=1000&filter=name:eq:%s", api.Server, api.Version, siteId, url.QueryEscape(datasourceName))
@@ -217,22 +214,26 @@ func (api *API) QueryDatasources(siteId string, datasourceName string) ([]Dataso
 	return retval.Datasources.Datasources, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Download_Datasource%3FTocPath%3DAPI%2520Reference%7C_____34
-//note that even though this is under the /datasources path, the docs list it under "Download Datasource" and not e.g. "Query Datasource Content"
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Download_Datasource%3FTocPath%3DAPI%2520Reference%7C_____34
+// NOTE: that even though this is under the /datasources path, the docs list it under "Download Datasource" and not e.g. "Query Datasource Content".
 func (api *API) getDatasourceContent(siteId, datasourceId string) (string, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/datasources/%s/content?includeExtract=false", api.Server, api.Version, siteId, datasourceId)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/datasources/%s/content?includeExtract=false", api.Server, api.Version, siteId, datasourceId)
 	headers := make(map[string]string)
-	body, err := api.makeRequestGetBody(url, GET, nil, nil, headers)
 
-	xml, err := extractXmlFromZip(bytes.NewReader(body), int64(len(body)))
+	body, err := api.makeRequestGetBody(requestUrl, GET, nil, nil, headers)
+	if err != nil {
+		return "", err
+	}
+
+	extractedXml, err := extractXmlFromZip(bytes.NewReader(body), int64(len(body)))
 	if err != nil {
 		if api.Debug {
 			fmt.Printf("For datasource with id %s: Got an error treating datasource like a zip (.tdsx), assuming it's plain xml (.tds) instead. \n", datasourceId)
 		}
-		xml = string(body)
+		extractedXml = string(body)
 	}
 
-	return xml, nil
+	return extractedXml, nil
 }
 
 // assumption is that the intersection of site, project, and datasource name is unique
@@ -243,8 +244,13 @@ func (api *API) GetDatasourceContentXML(siteId, tableauProjectId, datasourceName
 
 	var datasource *Datasource
 	datasources, err := api.QueryDatasources(siteId, datasourceName)
+	if err != nil {
+		return "", err
+	}
+
 	for _, d := range datasources {
 		if d.Project.ID == tableauProjectId && d.Name == datasourceName {
+			d := d
 			datasource = &d
 			break
 		}
@@ -271,16 +277,16 @@ func (api *API) GetDatasourceContentXML(siteId, tableauProjectId, datasourceName
 }
 
 // A .tdsx is really just a zip file containing the .tds XML
-func extractXmlFromZip(in io.ReaderAt, size int64) (xml string, err error) {
+func extractXmlFromZip(in io.ReaderAt, size int64) (string, error) {
 	r, err := zip.NewReader(in, size)
 
 	if err != nil {
-		return xml, err
+		return "", err
 	}
 
 	var datasourceFile *zip.File
 	if len(r.File) != 1 {
-		return xml, errors.New("A .tdsx file is expect to be a zip file containing exactly one file, the .tds datasource")
+		return "", errors.New("A .tdsx file is expect to be a zip file containing exactly one file, the .tds datasource")
 	}
 	for _, f := range r.File {
 		datasourceFile = f
@@ -289,15 +295,16 @@ func extractXmlFromZip(in io.ReaderAt, size int64) (xml string, err error) {
 
 	readerCloser, err := datasourceFile.Open()
 	if err != nil {
-		return xml, err
+		return "", err
 	}
 	defer readerCloser.Close()
 
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(readerCloser)
-	xml = string(buf.Bytes())
+	if _, err = buf.ReadFrom(readerCloser); err != nil {
+		return "", err
+	}
 
-	return xml, err
+	return buf.String(), nil
 }
 
 func (api *API) GetSiteID(siteName string) (string, error) {
@@ -316,40 +323,41 @@ func (api *API) GetSite(siteName string) (Site, error) {
 			return site, err
 		}
 		return site, err
-	} else {
-		contentUrl := ConvertSiteNameToContentUrl(siteName)
-		site, err := api.QuerySiteByContentUrl(contentUrl, false)
-		if err != nil {
-			return site, err
-		}
+	}
+
+	contentUrl := ConvertSiteNameToContentUrl(siteName)
+	site, err := api.QuerySiteByContentUrl(contentUrl, false)
+	if err != nil {
 		return site, err
 	}
+
+	return site, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Create_Project%3FTocPath%3DAPI%2520Reference%7C_____14
-//POST /api/api-version/sites/site-id/projects
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Create_Project%3FTocPath%3DAPI%2520Reference%7C_____14
+// POST /api/api-version/sites/site-id/projects
 func (api *API) CreateProject(siteId string, project Project) (*Project, error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/projects", api.Server, api.Version, siteId)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/projects", api.Server, api.Version, siteId)
 	createProjectRequest := CreateProjectRequest{Request: project}
 	xmlRep, err := createProjectRequest.XML()
 	if err != nil {
 		return nil, err
 	}
 	headers := make(map[string]string)
-	headers[content_type_header] = application_xml_content_type
+	headers[contentTypeHeader] = applicationXmlContentType
 	createProjectResponse := CreateProjectResponse{}
-	err = api.makeRequest(url, POST, xmlRep, &createProjectResponse, headers)
+	err = api.makeRequest(requestUrl, POST, xmlRep, &createProjectResponse, headers)
 	return &createProjectResponse.Project, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Publish_Datasource%3FTocPath%3DAPI%2520Reference%7C_____31
-func (api *API) PublishTDS(siteId string, tdsMetadata Datasource, fullTds string, overwrite bool) (retval *Datasource, err error) {
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Publish_Datasource%3FTocPath%3DAPI%2520Reference%7C_____31
+func (api *API) PublishTDS(siteId string, tdsMetadata Datasource, fullTds string, overwrite bool) (*Datasource, error) {
 	return api.publishDatasource(siteId, tdsMetadata, fullTds, "tds", overwrite)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Publish_Datasource%3FTocPath%3DAPI%2520Reference%7C_____31
-func (api *API) publishDatasource(siteId string, tdsMetadata Datasource, datasource string, datasourceType string, overwrite bool) (retval *Datasource, err error) {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/datasources?datasourceType=%s&overwrite=%v", api.Server, api.Version, siteId, datasourceType, overwrite)
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Publish_Datasource%3FTocPath%3DAPI%2520Reference%7C_____31
+func (api *API) publishDatasource(siteId string, tdsMetadata Datasource, datasource string, datasourceType string, overwrite bool) (*Datasource, error) {
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/datasources?datasourceType=%s&overwrite=%v", api.Server, api.Version, siteId, datasourceType, overwrite)
 	payload := fmt.Sprintf("--%s\r\n", api.Boundary)
 	payload += "Content-Disposition: name=\"request_payload\"\r\n"
 	payload += "Content-Type: text/xml\r\n"
@@ -357,8 +365,9 @@ func (api *API) publishDatasource(siteId string, tdsMetadata Datasource, datasou
 	tdsRequest := DatasourceCreateRequest{Request: tdsMetadata}
 	xmlRepresentation, err := tdsRequest.XML()
 	if err != nil {
-		return retval, err
+		return nil, err
 	}
+
 	payload += string(xmlRepresentation)
 	payload += fmt.Sprintf("\r\n--%s\r\n", api.Boundary)
 	payload += fmt.Sprintf("Content-Disposition: name=\"tableau_datasource\"; filename=\"%s.tds\"\r\n", tdsMetadata.Name)
@@ -367,48 +376,50 @@ func (api *API) publishDatasource(siteId string, tdsMetadata Datasource, datasou
 	payload += datasource
 	payload += fmt.Sprintf("\r\n--%s--\r\n", api.Boundary)
 	headers := make(map[string]string)
-	headers[content_type_header] = fmt.Sprintf("multipart/mixed; boundary=%s", api.Boundary)
-	err = api.makeRequest(url, POST, []byte(payload), retval, headers)
-	return retval, err
+	headers[contentTypeHeader] = fmt.Sprintf("multipart/mixed; boundary=%s", api.Boundary)
+
+	var retDatasource *Datasource
+	err = api.makeRequest(requestUrl, POST, []byte(payload), retDatasource, headers)
+	return retDatasource, err
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Datasource%3FTocPath%3DAPI%2520Reference%7C_____15
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Datasource%3FTocPath%3DAPI%2520Reference%7C_____15
 func (api *API) DeleteDatasource(siteId string, datasourceId string) error {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/datasources/%s", api.Server, api.Version, siteId, datasourceId)
-	return api.delete(url)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/datasources/%s", api.Server, api.Version, siteId, datasourceId)
+	return api.delete(requestUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Project%3FTocPath%3DAPI%2520Reference%7C_____17
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Project%3FTocPath%3DAPI%2520Reference%7C_____17
 func (api *API) DeleteProject(siteId string, projectId string) error {
-	url := fmt.Sprintf("%s/api/%s/sites/%s/projects/%s", api.Server, api.Version, siteId, projectId)
-	return api.delete(url)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s/projects/%s", api.Server, api.Version, siteId, projectId)
+	return api.delete(requestUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Project%3FTocPath%3DAPI%2520Reference%7C_____17
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Project%3FTocPath%3DAPI%2520Reference%7C_____17
 func (api *API) DeleteSite(siteId string) error {
-	url := fmt.Sprintf("%s/api/%s/sites/%s", api.Server, api.Version, siteId)
-	return api.delete(url)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s", api.Server, api.Version, siteId)
+	return api.delete(requestUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
 func (api *API) DeleteSiteByName(name string) error {
 	return api.deleteSiteByKey("name", name)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
 func (api *API) DeleteSiteByContentUrl(contentUrl string) error {
 	return api.deleteSiteByKey("contentUrl", contentUrl)
 }
 
-//http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
+// http://onlinehelp.tableau.com/current/api/rest_api/en-us/help.htm#REST/rest_api_ref.htm#Delete_Site%3FTocPath%3DAPI%2520Reference%7C_____19
 func (api *API) deleteSiteByKey(key string, value string) error {
-	url := fmt.Sprintf("%s/api/%s/sites/%s?key=%s", api.Server, api.Version, value, key)
-	return api.delete(url)
+	requestUrl := fmt.Sprintf("%s/api/%s/sites/%s?key=%s", api.Server, api.Version, value, key)
+	return api.delete(requestUrl)
 }
 
-func (api *API) delete(url string) error {
+func (api *API) delete(requestUrl string) error {
 	headers := make(map[string]string)
-	return api.makeRequest(url, DELETE, nil, nil, headers)
+	return api.makeRequest(requestUrl, DELETE, nil, nil, headers)
 }
 
 func (api *API) makeRequest(requestUrl string, method string, payload []byte, result interface{}, headers map[string]string) error {
@@ -416,6 +427,7 @@ func (api *API) makeRequest(requestUrl string, method string, payload []byte, re
 	return err
 }
 
+//nolint:gocognit // TODO: refactor to smaller functions
 func (api *API) makeRequestGetBody(requestUrl string, method string, payload []byte, result interface{}, headers map[string]string) ([]byte, error) {
 	if api.Debug {
 		fmt.Printf("%s:%v\n", method, requestUrl)
@@ -423,6 +435,7 @@ func (api *API) makeRequestGetBody(requestUrl string, method string, payload []b
 			fmt.Printf("%v\n", string(payload))
 		}
 	}
+
 	client := NewTimeoutClient(api.ConnectTimeout, api.ReadTimeout, true)
 	var req *http.Request
 	if len(payload) > 0 {
@@ -431,7 +444,7 @@ func (api *API) makeRequestGetBody(requestUrl string, method string, payload []b
 		if httpErr != nil {
 			return nil, httpErr
 		}
-		req.Header.Add(content_length_header, strconv.Itoa(len(payload)))
+		req.Header.Add(contentLengthHeader, strconv.Itoa(len(payload)))
 	} else {
 		var httpErr error
 		req, httpErr = http.NewRequest(strings.TrimSpace(method), strings.TrimSpace(requestUrl), nil)
@@ -439,17 +452,18 @@ func (api *API) makeRequestGetBody(requestUrl string, method string, payload []b
 			return nil, httpErr
 		}
 	}
-	if headers != nil {
-		for header, headerValue := range headers {
-			req.Header.Add(header, headerValue)
-		}
+
+	for header, headerValue := range headers {
+		req.Header.Add(header, headerValue)
 	}
+
 	if len(api.AuthToken) > 0 {
 		if api.Debug {
-			fmt.Printf("%s:%s\n", auth_header, api.AuthToken)
+			fmt.Printf("%s:%s\n", authHeader, api.AuthToken)
 		}
-		req.Header.Add(auth_header, api.AuthToken)
+		req.Header.Add(authHeader, api.AuthToken)
 	}
+
 	var httpErr error
 	resp, httpErr := client.Do(req)
 	if httpErr != nil {
@@ -457,16 +471,20 @@ func (api *API) makeRequestGetBody(requestUrl string, method string, payload []b
 	}
 	defer resp.Body.Close()
 	body, readBodyError := ioutil.ReadAll(resp.Body)
+
 	if api.Debug {
 		fmt.Printf("t4g Response:%v\n", body)
 	}
+
 	if readBodyError != nil {
 		return nil, readBodyError
 	}
-	if resp.StatusCode == 404 {
-		return nil, &StatusError{Code: 404, Msg: "Resource not found", URL: requestUrl}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &StatusError{Code: http.StatusNotFound, Msg: "Resource not found", URL: requestUrl}
 	}
-	if resp.StatusCode >= 300 {
+
+	if resp.StatusCode >= http.StatusMultipleChoices {
 		tErrorResponse := ErrorResponse{}
 		err := xml.Unmarshal(body, &tErrorResponse)
 		if err != nil {

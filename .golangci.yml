@@ -1,0 +1,247 @@
+run:
+  timeout: 3m
+  go: "1.17"
+
+# This file contains only configs which differ from defaults.
+# All possible options can be found here https://github.com/golangci/golangci-lint/blob/master/.golangci.reference.yml
+linters-settings:
+  lll:
+    # Max line length, lines longer will be reported.  '\t' is counted as 1 character.
+    line-length: 160
+
+  cyclop:
+    # The maximal code complexity to report.
+    max-complexity: 30
+    # The maximal average package complexity.
+    package-average: 10.0
+
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    check-type-assertions: true
+
+  funlen:
+    # Checks the number of lines in a function.
+    lines: 100
+    # Checks the number of statements in a function.
+    statements: 50
+
+  gocognit:
+    # Minimal code complexity to report
+    min-complexity: 20
+
+  gocritic:
+    # The list of supported checkers can be find in https://go-critic.github.io/overview.
+    settings:
+      captLocal:
+        # Whether to restrict checker to params only.
+        paramsOnly: false
+      underef:
+        # Whether to skip (*x).method() calls where x is a pointer receiver.
+        skipRecvDeref: false
+
+  gci:
+    # Sections to group imports into.
+    # The names are case-insensitive and may contain parameters in ().
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(github.com/AtScaleInc) # Custom section: groups all imports with the specified Prefix.
+      - blank # Blank section: contains all blank imports. This section is not present unless explicitly enabled.
+      - dot # Dot section: contains all dot imports. This section is not present unless explicitly enabled.
+    # Skip generated files.
+    skip-generated: true
+    # use the order defined in sections above
+    custom-order: true
+
+  gomnd:
+    # List of function patterns to exclude from analysis.
+    # Values always ignored: `time.Date`
+    ignored-functions:
+      - os.Chmod
+      - os.Mkdir
+      - os.MkdirAll
+      - os.OpenFile
+      - os.WriteFile
+      - ioutil.WriteFile
+      - strconv.FormatFloat
+      - strconv.FormatInt
+      - strconv.FormatUint
+      - strconv.ParseFloat
+      - strconv.ParseInt
+      - strconv.ParseUint
+
+  gomodguard:
+    blocked:
+      # List of blocked modules.
+      modules:
+        - github.com/golang/protobuf:
+            recommendations:
+              - google.golang.org/protobuf
+            reason: "see https://developers.google.com/protocol-buffers/docs/reference/go/faq#modules"
+
+  govet:
+    # Enable all analyzers.
+    enable-all: true
+    disable:
+      - fieldalignment # too strict
+    # Settings per analyzer.
+    settings:
+      shadow:
+        # Whether to be strict about shadowing; can be noisy.
+        strict: true
+
+  nakedret:
+    # Make an issue if func has more lines of code than this setting, and it has naked returns.
+    max-func-lines: 0
+
+  nolintlint:
+    # Exclude following linters from requiring an explanation.
+    allow-no-explanation: [ funlen, gocognit, lll ]
+    # Enable to require an explanation of nonzero length after each nolint directive.
+    require-explanation: true
+    # Enable to require nolint directives to mention the specific linter being suppressed.
+    require-specific: true
+
+  rowserrcheck:
+    # database/sql is always checked
+    packages:
+      - github.com/jmoiron/sqlx
+
+  tenv:
+    # The option `all` will run against whole test files (`_test.go`) regardless of method/function signatures.
+    # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
+    all: true
+
+  varcheck:
+    # Check usage of exported fields and variables.
+    exported-fields: true
+
+  revive:
+    rules:
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#var-naming
+      - name: "var-naming"
+        arguments:
+          - ["ID", "XML", "URL", "API"] # Allowed in any variable name (any case)
+          - [] # Not-allowed
+
+  stylecheck:
+    # https://staticcheck.io/docs/options#checks
+    checks: [
+      # enable all checks, then disabled specific checks below
+      "all",
+      # disables the rule for poorly chosen identifier, revive does a better job
+      "-ST1003",
+      # TODO: enable this once we fix error handling, error strings should not start with capital letters
+      # but we use the error strings for user feedback in places so the rule is disabled until we stop
+      # doing that.
+      "-ST1005"
+    ]
+
+linters:
+  disable-all: true
+  enable:
+    ## enabled by default
+    - deadcode # Finds unused code
+    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases
+    - gosimple # Linter for Go source code that specializes in simplifying a code
+    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - ineffassign # Detects when assignments to existing variables are not used
+    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks
+    - structcheck # Finds unused struct fields
+    - typecheck # Like the front-end of a Go compiler, parses and type-checks Go code
+    - unused # Checks Go code for unused constants, variables, functions and types
+    - varcheck # Finds unused global variables and constants
+
+    ## disabled by default
+    - asasalint # Check for pass []any as any in variadic func(...any)
+    - asciicheck # Simple linter to check that your code does not contain non-ASCII identifiers
+    - bidichk # Checks for dangerous unicode character sequences
+    - bodyclose # checks whether HTTP response body is closed successfully
+    - contextcheck # check the function whether use a non-inherited context
+    - cyclop # checks function and package cyclomatic complexity
+    - dupl # Tool for code clone detection
+    - durationcheck # check for two durations multiplied together
+    - errname # Checks that sentinel errors are prefixed with the Err and error types are suffixed with the Error.
+    - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
+    - execinquery # execinquery is a linter about query string checker in Query function which reads your Go src files and warning it finds
+    - exhaustive # check exhaustiveness of enum switch statements
+    - exportloopref # checks for pointers to enclosing loop variables
+    - funlen # Tool for detection of long functions
+    - gochecknoinits # Checks that no init functions are present in Go code
+    - gocognit # Computes and checks the cognitive complexity of functions
+    - goconst # Finds repeated strings that could be replaced by a constant
+    - gocritic # Provides diagnostics that check for bugs, performance and style issues.
+    - gocyclo # Computes and checks the cyclomatic complexity of functions
+    - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
+    - gomnd # An analyzer to detect magic numbers.
+    - gomoddirectives # Manage the use of 'replace', 'retract', and 'excludes' directives in go.mod.
+    - gomodguard # Allow and block list linter for direct Go module dependencies. This is different from depguard where there are different block types for example version constraints and module recommendations.
+    - goprintffuncname # Checks that printf-like functions are named with f at the end
+    - gosec # Inspects source code for security problems
+    - lll # Reports long lines
+    - makezero # Finds slice declarations with non-zero initial length
+    - nakedret # Finds naked returns in functions greater than a specified function length
+    - nestif # Reports deeply nested if statements
+    - nilerr # Finds the code that returns nil even if it checks that the error is not nil.
+    - nilnil # Checks that there is no simultaneous return of nil error and an invalid value.
+    - noctx # noctx finds sending http request without context.Context
+    - nolintlint # Reports ill-formed or insufficient nolint directives
+    - nonamedreturns # Reports all named returns
+    - nosnakecase # Detects snake case of variable naming and function name
+    - nosprintfhostport # Checks for misuse of Sprintf to construct a host with port in a URL.
+    - predeclared # find code that shadows one of Go's predeclared identifiers
+    - promlinter # Check Prometheus metrics naming via promlint
+    - revive # Fast, configurable, extensible, flexible, and beautiful linter for Go. Drop-in replacement of golint.
+    - rowserrcheck # checks whether Err of rows is checked successfully
+    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
+    - stylecheck # Stylecheck is a replacement for golint
+    - tenv # tenv is analyzer that detects using os.Setenv instead of t.Setenv since Go1.17
+    - testpackage # linter that makes you use a separate _test package
+    - tparallel # tparallel detects inappropriate usage of t.Parallel() method in your Go test codes
+    - unconvert # Remove unnecessary type conversions
+    - unparam # Reports unused function parameters
+    - wastedassign # wastedassign finds wasted assignment statements.
+    - whitespace # Tool for detection of leading and trailing whitespace
+    - decorder # check declaration order and count of types, constants, variables and functions
+    - goheader # Checks is file header matches to pattern
+    - prealloc # [premature optimization, but can be used in some cases] Finds slice declarations that could potentially be preallocated
+    - containedctx # containedctx is a linter that detects struct contained context.Context field
+    - gci # Gci controls golang package import order and makes it always deterministic.
+    - importas # Enforces consistent import aliases
+    - tagliatelle # Checks the struct tags.
+    
+    # Revisit...
+    # - exhaustruct # Checks if all structure fields are initialized
+    # - forbidigo # Forbids identifiers (TODO: re-enable once logging is fixed)
+    # - gochecknoglobals # check that no global variables exist (TODO: would be good to enable this for testing reasons)
+    # - godot # Check if comments end in a period (TODO: re-enable once comments are massively improved)
+    # - godox # Tool for detection of FIXME, TODO and other comment keywords
+    # - wrapcheck # Checks that errors returned from external packages are wrapped
+    
+issues:
+  # Maximum count of issues with the same text.
+  max-same-issues: 50
+
+  exclude-rules:
+    - source: "^//\\s*go:generate\\s"
+      linters: [ lll ]
+    - source: "(noinspection|TODO)"
+      linters: [ godot ]
+    - source: "//noinspection"
+      linters: [ gocritic ]
+    - source: "^\\s+if _, ok := err\\.\\([^.]+\\.InternalError\\); ok {"
+      linters: [ errorlint ]
+    - path: "_test\\.go"
+      linters:
+        - bodyclose
+        - dupl
+        - funlen
+        - goconst
+        - gosec
+        - noctx
+        - wrapcheck
+
+output:
+  # sets the console output for easy reading for developers running make lint | make lint-fix
+  # it is overridden in jenkins builds to output a format consumable by Jenkins reporting tools
+  format: tab

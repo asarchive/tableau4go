@@ -18,10 +18,11 @@ import (
 	"time"
 )
 
-const API_VERSION = "2.0"
-const DEFAULT_SERVER = "http://localhost:8000"
-const BOUNDARY_STRING = "813e3160-3c95-11e5-a151-feff819cdc9f"
-const CRLF = "\r\n"
+// TODO: remove once we confirm they are not used
+// const ApiVersion = "2.0"
+// const DefaultServer = "http://localhost:8000"
+// const BoundaryString = "813e3160-3c95-11e5-a151-feff819cdc9f"
+// const CRLF = "\r\n"
 
 type API struct {
 	Server              string
@@ -40,7 +41,15 @@ func NewAPI(server string, version string, boundary string, defaultSiteName stri
 	if strings.HasSuffix(server, "/") {
 		fixedUpServer = server[0 : len(server)-1]
 	}
-	return API{Server: fixedUpServer, Version: version, Boundary: boundary, DefaultSiteName: defaultSiteName, OmitDefaultSiteName: omitDefaultSiteName, ConnectTimeout: cTimeout, ReadTimeout: rTimeout}
+	return API{
+		Server:              fixedUpServer,
+		Version:             version,
+		Boundary:            boundary,
+		DefaultSiteName:     defaultSiteName,
+		OmitDefaultSiteName: omitDefaultSiteName,
+		ConnectTimeout:      cTimeout,
+		ReadTimeout:         rTimeout,
+	}
 }
 
 type Project struct {
@@ -148,13 +157,13 @@ type ServerInfo struct {
 
 type QueryProjectsResponse struct {
 	Pagination Pagination `json:"pagination,omitempty" xml:"pagination,omitempty"`
-	Projects Projects `json:"projects,omitempty" xml:"projects,omitempty"`
+	Projects   Projects   `json:"projects,omitempty" xml:"projects,omitempty"`
 }
 
 type Pagination struct {
-	PageNumber  	int `json:"pageNumber,omitempty" xml:"pageNumber,attr,omitempty"`
-	PageSize    	int `json:"pageSize,omitempty" xml:"pageSize,attr,omitempty"`
-	TotalAvailable  int `json:"totalAvailable,omitempty" xml:"totalAvailable,attr,omitempty"`
+	PageNumber     int `json:"pageNumber,omitempty" xml:"pageNumber,attr,omitempty"`
+	PageSize       int `json:"pageSize,omitempty" xml:"pageSize,attr,omitempty"`
+	TotalAvailable int `json:"totalAvailable,omitempty" xml:"totalAvailable,attr,omitempty"`
 }
 
 type Credentials struct {
@@ -225,6 +234,7 @@ type Site struct {
 }
 
 type SiteUsage struct {
+	//nolint:tagliatelle // can't change old json fields that are not camel-cased
 	NumberOfUsers int `json:"number-of-users" xml:"number-of-users,attr"`
 	Storage       int `json:"storage" xml:"storage,attr"`
 }
@@ -240,16 +250,16 @@ func NewConnectionCredentials(name, password string, embed bool) ConnectionCrede
 }
 
 type ErrorResponse struct {
-	Error Terror `json:"error,omitempty" xml:"error,omitempty"`
+	Error TError `json:"error,omitempty" xml:"error,omitempty"`
 }
 
-type Terror struct {
+type TError struct {
 	Code    string `json:"code,omitempty" xml:"code,attr,omitempty"`
 	Summary string `json:"summary,omitempty" xml:"summary,omitempty"`
 	Detail  string `json:"detail,omitempty" xml:"detail,omitempty"`
 }
 
-func (t Terror) Error() string {
+func (t TError) Error() string {
 	return fmt.Sprintf("Code:%s, Summary:%s, Detail:%s", t.Code, t.Summary, t.Detail)
 }
 

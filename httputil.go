@@ -12,20 +12,22 @@ import (
 )
 
 var (
-	connectTimeOut   = time.Duration(10 * time.Second)
-	readWriteTimeout = time.Duration(20 * time.Second)
+	connectTimeOut   = 10 * time.Second
+	readWriteTimeout = 20 * time.Second
 )
 
-func timeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
+func timeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(network, address string) (net.Conn, error) {
 	return func(netw, addr string) (net.Conn, error) {
 		conn, err := net.DialTimeout(netw, addr, cTimeout)
 		if err != nil {
 			return nil, err
 		}
+
 		if rwTimeout > 0 {
-			conn.SetDeadline(time.Now().Add(rwTimeout))
+			time.Now().Add(rwTimeout)
+			err = conn.SetDeadline(time.Now().Add(rwTimeout))
 		}
-		return conn, nil
+		return conn, err
 	}
 }
 
@@ -36,12 +38,15 @@ func NewTimeoutClient(cTimeout time.Duration, rwTimeout time.Duration, useClient
 	certLocation := os.Getenv("atscale_http_sslcert")
 	keyLocation := os.Getenv("atscale_http_sslkey")
 	caFile := os.Getenv("atscale_ca_file")
-	// default
+
+	// default tlsConfig
+	//nolint:gosec // skip verify is currently allowed
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+
+	//nolint:nestif // TODO: simplify nested if's
 	if useClientCerts && len(certLocation) > 0 && len(keyLocation) > 0 {
 		// Load client cert if available
-		cert, err := tls.LoadX509KeyPair(certLocation, keyLocation)
-		if err == nil {
+		if cert, loadKeyPairErr := tls.LoadX509KeyPair(certLocation, keyLocation); loadKeyPairErr == nil {
 			if len(caFile) > 0 {
 				caCertPool := x509.NewCertPool()
 				caCert, err := ioutil.ReadFile(caFile)
@@ -49,13 +54,19 @@ func NewTimeoutClient(cTimeout time.Duration, rwTimeout time.Duration, useClient
 					fmt.Printf("Error setting up caFile [%s]:%v\n", caFile, err)
 				}
 				caCertPool.AppendCertsFromPEM(caCert)
+
+				//nolint:gosec // skip verify is currently allowed
 				tlsConfig = &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true, RootCAs: caCertPool}
+
+				//nolint:staticcheck // SA1019 TODO: remove this line and let go negotiate the first matching cert
 				tlsConfig.BuildNameToCertificate()
 			} else {
+				//nolint:gosec // skip verify is currently allowed
 				tlsConfig = &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 			}
 		}
 	}
+
 	return &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,

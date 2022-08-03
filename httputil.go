@@ -24,10 +24,11 @@ func timeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(network
 		}
 
 		if rwTimeout > 0 {
-			time.Now().Add(rwTimeout)
-			err = conn.SetDeadline(time.Now().Add(rwTimeout))
+			if err = conn.SetDeadline(time.Now().Add(rwTimeout)); err != nil {
+				return nil, err
+			}
 		}
-		return conn, err
+		return conn, nil
 	}
 }
 

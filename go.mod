@@ -1,3 +1,3 @@
 module github.com/AtScaleInc/tableau4go
 
-go 1.17
+go 1.19
